@@ -2,6 +2,9 @@ package medpointsdb_test
 
 import (
 	"bytes"
+	"fmt"
+	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/MedPoints/storage/medpointsdb"
@@ -70,4 +73,64 @@ func TestLvlDB_GetPutCommonTest(t *testing.T) {
 			t.Fatalf("value should be delete %q", v)
 		}
 	}
+}
+
+func TestLvlDB_MultiThreadTest(t *testing.T) {
+	t.Parallel()
+	db, clean_up := createDbTestInstance()
+	defer clean_up()
+
+	const n = 16
+	var pending sync.WaitGroup
+
+	pending.Add(n)
+	for i := 0; i < n; i++ {
+		go func(key string) {
+			defer pending.Done()
+			err := db.Put([]byte(key), []byte("v"+key))
+			if err != nil {
+				panic("put broken: " + err.Error())
+			}
+		}(strconv.Itoa(i))
+	}
+	pending.Wait()
+
+	pending.Add(n)
+	for i := 0; i < n; i++ {
+		go func(key string) {
+			defer pending.Done()
+			data, err := db.Get([]byte(key))
+			if err != nil {
+				panic("get failed: " + err.Error())
+			}
+			if !bytes.Equal(data, []byte("v"+key)) {
+				panic(fmt.Sprintf("get brokent, %q != %q", []byte(data), []byte("v"+key)))
+			}
+		}(strconv.Itoa(i))
+	}
+	pending.Wait()
+
+	pending.Add(n)
+	for i := 0; i < n; i++ {
+		go func(key string) {
+			defer pending.Done()
+			err := db.Delete([]byte(key))
+			if err != nil {
+				panic("delete failed: " + err.Error())
+			}
+		}(strconv.Itoa(i))
+	}
+	pending.Wait()
+
+	pending.Add(n)
+	for i := 0; i < n; i++ {
+		go func(key string) {
+			defer pending.Done()
+			_, err := db.Get([]byte(key))
+			if err == nil {
+				panic("get find something")
+			}
+		}(strconv.Itoa(i))
+	}
+	pending.Wait()
 }
