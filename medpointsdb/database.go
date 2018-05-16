@@ -1,7 +1,6 @@
 package medpointsdb
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -29,7 +28,7 @@ type LvlDBDatabase struct {
 func NewLvlDBDatabase(file string, cache int, handles int) (*LvlDBDatabase, error) {
 	log := newLog("database")
 
-	fmt.Printf("Database file name %v", file)
+	log.Printf("Database file name %v", file)
 
 	db, err := leveldb.OpenFile(file, &opt.Options{
 		OpenFilesCacheCapacity: handles,
@@ -54,6 +53,10 @@ func (db *LvlDBDatabase) PathToDatabase() string {
 	return db.path
 }
 
+func (db *LvlDBDatabase) LvlDB() *leveldb.DB {
+	return db.db
+}
+
 func (db *LvlDBDatabase) Put(key []byte, value []byte) error {
 	return db.db.Put(key, value, nil)
 }
@@ -72,4 +75,13 @@ func (db *LvlDBDatabase) Get(key []byte) ([]byte, error) {
 
 func (db *LvlDBDatabase) Delete(key []byte) error {
 	return db.db.Delete(key, nil)
+}
+
+func (db *LvlDBDatabase) Close() {
+	err := db.db.Close()
+	if err == nil {
+		db.log.Printf("Database closed")
+	} else {
+		db.log.Panicf("Failed to close database %v", err)
+	}
 }
