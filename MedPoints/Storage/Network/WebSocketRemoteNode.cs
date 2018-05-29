@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Neo.Network;
 using Storage.Utils;
 
 namespace Storage.Network

@@ -3,10 +3,8 @@ using Storage.Utils;
 
 namespace Storage.Core
 {
-    public interface IVerifiable : ISerializable, IScriptContainer
+    public interface IVerifiable : ISerializable
     {
-
-        Witness[] Scripts { get; set; }
         void DeserializeUnsigned(BinaryReader reader);
         UInt160[] GetScriptHashesForVerifying();
         void SerializeUnsigned(BinaryWriter writer);
