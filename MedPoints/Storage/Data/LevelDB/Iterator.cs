@@ -28,7 +28,7 @@ namespace Storage.Data.LevelDB
             }
         }
 
-        public Slice Key()
+        /*public Slice Key()
         {
             UIntPtr length;
             IntPtr key = leveldb_iter_key(handle, out length);
@@ -74,6 +74,6 @@ namespace Storage.Data.LevelDB
             IntPtr value = leveldb_iter_value(handle, out length);
             CheckError();
             return new Slice(value, length);
-        }
+        }*/
     }
 }

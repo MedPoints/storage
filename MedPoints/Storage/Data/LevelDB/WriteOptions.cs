@@ -2,7 +2,7 @@
 
 namespace Storage.Data.LevelDB
 {
-    class WriteOptions
+    public class WriteOptions
     {
         public static readonly WriteOptions Default = new WriteOptions();
         internal readonly IntPtr handle = NativeWrapper.leveldb_writeoptions_create();

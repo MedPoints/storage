@@ -17,7 +17,7 @@ namespace Storage.Data.LevelDB
             leveldb_writebatch_clear(Handle);
         }
 
-        public void Delete(Slice key)
+        /*public void Delete(Slice key)
         {
             leveldb_writebatch_delete(Handle, key.buffer, (UIntPtr)key.buffer.Length);
         }
@@ -25,6 +25,6 @@ namespace Storage.Data.LevelDB
         public void Put(Slice key, Slice value)
         {
             leveldb_writebatch_put(Handle, key.buffer, (UIntPtr)key.buffer.Length, value.buffer, (UIntPtr)value.buffer.Length);
-        }
+        }*/
     }
 }

@@ -3,7 +3,7 @@ using static Storage.Data.LevelDB.NativeWrapper;
 
 namespace Storage.Data.LevelDB
 {
-    class DatabaseContext : IDisposable
+    public class DatabaseContext : IDisposable
     {
         private IntPtr handle;
 
@@ -29,7 +29,7 @@ namespace Storage.Data.LevelDB
         public void Delete(WriteOptions options, Slice key)
         {
             IntPtr error;
-            leveldb_delete(handle, options.handle, key.buffer, (UIntPtr)key.buffer.Length, out error);
+            leveldb_delete(handle, options.handle, key.Buffer, (UIntPtr)key.Buffer.Length, out error);
             NativeHelper.CheckError(error);
         }
 
@@ -37,7 +37,7 @@ namespace Storage.Data.LevelDB
         {
             UIntPtr length;
             IntPtr error;
-            IntPtr value = leveldb_get(handle, options.handle, key.buffer, (UIntPtr)key.buffer.Length, out length, out error);
+            IntPtr value = leveldb_get(handle, options.handle, key.Buffer, (UIntPtr)key.Buffer.Length, out length, out error);
             try
             {
                 NativeHelper.CheckError(error);
@@ -77,7 +77,7 @@ namespace Storage.Data.LevelDB
         public void Put(WriteOptions options, Slice key, Slice value)
         {
             IntPtr error;
-            leveldb_put(handle, options.handle, key.buffer, (UIntPtr)key.buffer.Length, value.buffer, (UIntPtr)value.buffer.Length, out error);
+            leveldb_put(handle, options.handle, key.Buffer, (UIntPtr)key.Buffer.Length, value.Buffer, (UIntPtr)value.Buffer.Length, out error);
             NativeHelper.CheckError(error);
         }
 
@@ -85,7 +85,7 @@ namespace Storage.Data.LevelDB
         {
             UIntPtr length;
             IntPtr error;
-            IntPtr v = leveldb_get(handle, options.handle, key.buffer, (UIntPtr)key.buffer.Length, out length, out error);
+            IntPtr v = leveldb_get(handle, options.handle, key.Buffer, (UIntPtr)key.Buffer.Length, out length, out error);
             if (error != IntPtr.Zero)
             {
                 leveldb_free(error);
