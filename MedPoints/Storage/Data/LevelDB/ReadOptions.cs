@@ -3,7 +3,7 @@ using static Storage.Data.LevelDB.NativeWrapper;
 
 namespace Storage.Data.LevelDB
 {
-    class ReadOptions
+    public class ReadOptions
     {
         public static readonly ReadOptions Default = new ReadOptions();
         internal readonly IntPtr handle = leveldb_readoptions_create();

@@ -1,34 +1,40 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Storage.Data.LevelDB
 {
-    public struct Slice : IComparable<Slice>, IEquatable<Slice>
+    public class Slice : IComparable<Slice>, IEquatable<Slice>
     {
-        internal byte[] buffer;
+        internal byte[] Buffer;
 
-        internal Slice(IntPtr data, UIntPtr length)
+        public Slice()
         {
-            buffer = new byte[(int)length];
-            Marshal.Copy(data, buffer, 0, (int)length);
+            
+        }
+
+        public Slice(IntPtr data, UIntPtr length)
+        {
+            Buffer = new byte[(int)length];
+            Marshal.Copy(data, Buffer, 0, (int)length);
         }
 
         public int CompareTo(Slice other)
         {
-            for (int i = 0; i < buffer.Length && i < other.buffer.Length; i++)
+            for (int i = 0; i < Buffer.Length && i < other.Buffer.Length; i++)
             {
-                int r = buffer[i].CompareTo(other.buffer[i]);
+                int r = Buffer[i].CompareTo(other.Buffer[i]);
                 if (r != 0) return r;
             }
-            return buffer.Length.CompareTo(other.buffer.Length);
+            return Buffer.Length.CompareTo(other.Buffer.Length);
         }
 
         public bool Equals(Slice other)
         {
-            if (buffer.Length != other.buffer.Length) return false;
-            return buffer.SequenceEqual(other.buffer);
+            if (Buffer.Length != other.Buffer.Length) return false;
+            return Buffer.SequenceEqual(other.Buffer);
         }
 
         public override bool Equals(object obj)
@@ -40,19 +46,33 @@ namespace Storage.Data.LevelDB
 
         public override int GetHashCode()
         {
-            throw new NotImplementedException();
+            unchecked
+            {
+                const int p = 16777619;
+                var hash = (int)2166136261;
+
+                for (int i = 0; i < Buffer.Length; i++)
+                    hash = (hash ^ Buffer[i]) * p;
+
+                hash += hash << 13;
+                hash ^= hash >> 7;
+                hash += hash << 3;
+                hash ^= hash >> 17;
+                hash += hash << 5;
+                return hash;
+            }
         }
 
         public byte[] ToArray()
         {
-            return buffer ?? new byte[0];
+            return Buffer ?? new byte[0];
         }
 
-        public unsafe bool ToBoolean()
+        unsafe public bool ToBoolean()
         {
-            if (buffer.Length != sizeof(bool))
+            if (Buffer.Length != sizeof(bool))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((bool*)pbyte);
             }
@@ -60,56 +80,56 @@ namespace Storage.Data.LevelDB
 
         public byte ToByte()
         {
-            if (buffer.Length != sizeof(byte))
+            if (Buffer.Length != sizeof(byte))
                 throw new InvalidCastException();
-            return buffer[0];
+            return Buffer[0];
         }
 
-        public unsafe double ToDouble()
+        unsafe public double ToDouble()
         {
-            if (buffer.Length != sizeof(double))
+            if (Buffer.Length != sizeof(double))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((double*)pbyte);
             }
         }
 
-        public unsafe short ToInt16()
+        unsafe public short ToInt16()
         {
-            if (buffer.Length != sizeof(short))
+            if (Buffer.Length != sizeof(short))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((short*)pbyte);
             }
         }
 
-        public unsafe int ToInt32()
+        unsafe public int ToInt32()
         {
-            if (buffer.Length != sizeof(int))
+            if (Buffer.Length != sizeof(int))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((int*)pbyte);
             }
         }
 
-        public unsafe long ToInt64()
+        unsafe public long ToInt64()
         {
-            if (buffer.Length != sizeof(long))
+            if (Buffer.Length != sizeof(long))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((long*)pbyte);
             }
         }
 
-        public unsafe float ToSingle()
+        unsafe public float ToSingle()
         {
-            if (buffer.Length != sizeof(float))
+            if (Buffer.Length != sizeof(float))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((float*)pbyte);
             }
@@ -117,35 +137,34 @@ namespace Storage.Data.LevelDB
 
         public override string ToString()
         {
-            return Encoding.UTF8.GetString(buffer);
+            return Encoding.UTF8.GetString(Buffer);
         }
 
-        public unsafe ushort ToUInt16()
+        unsafe public ushort ToUInt16()
         {
-            if (buffer.Length != sizeof(ushort))
+            if (Buffer.Length != sizeof(ushort))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((ushort*)pbyte);
             }
         }
 
-        public unsafe uint ToUInt32(int index = 0)
+        unsafe public uint ToUInt32(int index = 0)
         {
-            if (buffer.Length != sizeof(uint) + index)
+            if (Buffer.Length != sizeof(uint) + index)
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[index])
+            fixed (byte* pbyte = &Buffer[index])
             {
                 return *((uint*)pbyte);
             }
         }
 
-        public unsafe
-            ulong ToUInt64()
+        unsafe public ulong ToUInt64()
         {
-            if (buffer.Length != sizeof(ulong))
+            if (Buffer.Length != sizeof(ulong))
                 throw new InvalidCastException();
-            fixed (byte* pbyte = &buffer[0])
+            fixed (byte* pbyte = &Buffer[0])
             {
                 return *((ulong*)pbyte);
             }
@@ -153,62 +172,62 @@ namespace Storage.Data.LevelDB
 
         public static implicit operator Slice(byte[] data)
         {
-            return new Slice { buffer = data };
+            return new Slice { Buffer = data };
         }
 
         public static implicit operator Slice(bool data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(byte data)
         {
-            return new Slice { buffer = new[] { data } };
+            return new Slice { Buffer = new[] { data } };
         }
 
         public static implicit operator Slice(double data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(short data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(int data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(long data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(float data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(string data)
         {
-            return new Slice { buffer = Encoding.UTF8.GetBytes(data) };
+            return new Slice { Buffer = Encoding.UTF8.GetBytes(data) };
         }
 
         public static implicit operator Slice(ushort data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(uint data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static implicit operator Slice(ulong data)
         {
-            return new Slice { buffer = BitConverter.GetBytes(data) };
+            return new Slice { Buffer = BitConverter.GetBytes(data) };
         }
 
         public static bool operator <(Slice x, Slice y)
