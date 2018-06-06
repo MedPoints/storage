@@ -8,6 +8,9 @@ namespace Storage.Cli
     {
         static void Main(string[] args)
         {
+            var aaa = new Wallet();
+            var bbb = new Wallet();
+
             var block = new Block("Genesis", "0");
             block.MineBlock(3);
             var second = new Block("Second", block.Hash);
