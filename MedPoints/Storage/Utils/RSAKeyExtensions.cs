@@ -21,7 +21,7 @@ namespace Storage.Utils
 
 
     public static class RsaKeyExtensions
-    {      
+    {
         public static void FromJsonString(this RSA rsa, string jsonString)
         {
             try

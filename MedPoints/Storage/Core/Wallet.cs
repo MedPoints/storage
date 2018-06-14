@@ -9,17 +9,61 @@ namespace Storage.Core
 {
     public class Wallet
     {
-        private readonly string _privateKey;
-        private readonly string _publicKey;
+        private string PrivateKey { get; }
+        public string PublicKey { get; }
+
         private readonly UnicodeEncoding _encoder = new UnicodeEncoding();
+        // ReSharper disable once InconsistentNaming
+        public Dictionary<String, TransactionOutput> UTXOs { get; set; } = new Dictionary<String, TransactionOutput>();
 
         public Wallet()
         {
             using (var rsa = RSA.Create())
             {
-                _privateKey = rsa.ToJsonString(true);
-                _publicKey = rsa.ToJsonString(false);
+                PrivateKey = rsa.ToJsonString(true);
+                PublicKey = rsa.ToJsonString(false);
             }
+        }
+
+        public decimal GetBalance(Dictionary<String, TransactionOutput> chainUtxos)
+        {
+            decimal sum = 0;
+            foreach (var utxo in chainUtxos)
+            {
+                var item = utxo.Value;
+                if (item.IsMine(PublicKey))
+                {
+                    UTXOs[item.Id] = item;
+                    sum += item.Amount;
+                }
+            }
+            return sum;
+        }
+
+        public Transaction Send(Dictionary<String, TransactionOutput> chainUtxos, string recipient, decimal amount)
+        {
+            if (GetBalance(chainUtxos) < amount)
+                return null;
+            
+            var inputs = new List<TransactionInput>();
+            decimal sum = 0;
+            foreach (var utxoItem in UTXOs)
+            {
+                var utxo = utxoItem.Value;
+                sum += utxo.Amount;
+                inputs.Add(new TransactionInput(){TransactionOutputId = utxo.Id});
+                if(sum > amount) break;
+            }
+
+            var tx = new Transaction(PublicKey, recipient, amount, inputs);
+            tx.Sign(this);
+
+            foreach (var transactionInput in inputs)
+            {
+                UTXOs.Remove(transactionInput.TransactionOutputId);
+            }
+
+            return tx;
         }
 
         public string Decrypt(string data)
@@ -32,7 +76,7 @@ namespace Storage.Core
                 dataByte[i] = Convert.ToByte(dataArray[i]);
             }
 
-            rsa.FromJsonString(_privateKey);
+            rsa.FromJsonString(PrivateKey);
             var decryptedByte = rsa.Decrypt(dataByte, false);
             return _encoder.GetString(decryptedByte);
         }
@@ -40,7 +84,7 @@ namespace Storage.Core
         public string Encrypt(string data)
         {
             var rsa = new RSACryptoServiceProvider();
-            rsa.FromJsonString(_publicKey);
+            rsa.FromJsonString(PublicKey);
             var dataToEncrypt = _encoder.GetBytes(data);
             var encryptedByteArray = rsa.Encrypt(dataToEncrypt, false).ToArray();
             var length = encryptedByteArray.Count();
@@ -57,5 +101,66 @@ namespace Storage.Core
 
             return sb.ToString();
         }
+
+        public string SignMessage(string message)
+        {
+            string signedMessage;
+            try
+            {
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
+                //Initiate a new instanse with 2048 bit key size
+
+                rsa.FromJsonString(PrivateKey);
+                // Load private key
+
+                signedMessage = Convert.ToBase64String(rsa.SignData(Encoding.UTF8.GetBytes(message), CryptoConfig.MapNameToOID("SHA512")));
+                //rsa.SignData( buffer, hash algorithm) - For signed data. Here I used SHA512 for hash. 
+                //Encoding.UTF8.GetBytes(string) - convert string to byte messafe 
+                //Convert.ToBase64String(string) - convert back to a string.
+            }
+            catch (Exception)
+            {
+                signedMessage = String.Empty;
+            }
+
+            return signedMessage;
+        }
+
+        public byte[] SignMessageInBytes(string message)
+        {
+            byte[] signedMessage;
+            try
+            {
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
+                rsa.FromJsonString(PrivateKey);
+                signedMessage = rsa.SignData(Encoding.UTF8.GetBytes(message), CryptoConfig.MapNameToOID("SHA512"));
+            }
+            catch (Exception)
+            {
+                signedMessage = default(byte[]);
+            }
+
+            return signedMessage;
+        }
+
+        public static bool VerifyMessage(string originalMessage, string signedMessage, string publicKey)
+        {
+            bool verified;
+            try
+            {
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
+                rsa.FromJsonString(publicKey);
+                // load public key 
+                verified = rsa.VerifyData(Encoding.UTF8.GetBytes(originalMessage), CryptoConfig.MapNameToOID("SHA512"), Convert.FromBase64String(signedMessage));
+            }
+            catch (Exception)
+            {
+                verified = false;
+            }
+
+            return verified;
+        }
+
+
     }
 }

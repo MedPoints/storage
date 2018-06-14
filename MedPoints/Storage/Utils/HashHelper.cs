@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using Storage.Core;
 
 namespace Storage.Utils
 {
@@ -21,6 +22,30 @@ namespace Storage.Utils
             }
 
             return sb.ToString();
+        }
+
+        public static string GenerateMerkleRoot(this List<Transaction> transactions)
+        {
+            int count = transactions.Count;
+            var previousTreeLayer = new List<string>();
+            foreach (var transaction in transactions)
+            {
+                previousTreeLayer.Add(transaction.Id);
+            }
+            var treeLayer = previousTreeLayer;
+            while (count > 1)
+            {
+                treeLayer = new List<string>();
+                for (int i = 1; i < previousTreeLayer.Count; i++)
+                {
+                    var hash = $"{previousTreeLayer[i - 1]}{previousTreeLayer[i]}".GetSha256Hash();
+                    treeLayer.Add(hash);
+                }
+                count = treeLayer.Count;
+                previousTreeLayer = treeLayer;
+            }
+
+            return treeLayer.Count == 1 ? treeLayer[0] : "";
         }
     }
 }
