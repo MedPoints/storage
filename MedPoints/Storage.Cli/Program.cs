@@ -8,12 +8,12 @@ namespace Storage.Cli
     {
         static void Main(string[] args)
         {
-            var aaa = new Wallet();
-            var bbb = new Wallet();
+            /*var sender = new Wallet();
+            var receipent = new Wallet();
 
-            var block = new Block("Genesis", "0");
-            block.MineBlock(3);
-            var second = new Block("Second", block.Hash);
+           var transaction = new Transaction(sender.PublicKey, receipent.PublicKey, 20, null, null);
+           transaction.Sign(sender);
+           transaction.VerifySignature();*/
 
             /*var dataBase = DatabaseContext.Open("test", new Options { CreateIfMissing = true });
             dataBase.Put(WriteOptions.Default, block.Hash.ToSlice(), block.ToSlice());
