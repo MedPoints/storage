@@ -7,7 +7,7 @@ namespace Storage.Core
 {
     public class Transaction
     {
-        public string Id { get; private set; }
+        public string Id { get; set; }
         public string Sender { get; private set; }
         public string Reciepient { get; private set; }
         public decimal Amount { get; private set; }

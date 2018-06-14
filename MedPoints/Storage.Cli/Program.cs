@@ -10,6 +10,7 @@ namespace Storage.Cli
     {
         static void Main(string[] args)
         {
+            TestChain.Test();
 
             /*var sender = new Wallet();
             var receipent = new Wallet();
