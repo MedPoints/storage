@@ -12,6 +12,8 @@ namespace Storage.Core
         public string Data { get; private set; }
         public DateTime Time { get; private set; }
         public int Nonce { get; private set; }
+        public string MerkleRoot { get; private set; }
+        public List<Transaction> Transactions { get;} = new List<Transaction>();
 
         public Block(string data, string previousHash)
         {
@@ -29,6 +31,7 @@ namespace Storage.Core
 
         public void MineBlock(int difficulty)
         {
+            MerkleRoot = Transactions.GenerateMerkleRoot();
             var target = string.Empty.PadLeft(difficulty, '0');
             while (Hash.Substring(0, difficulty) != target)
             {
@@ -36,6 +39,16 @@ namespace Storage.Core
                 Hash = CalculateHash();
             }
             Console.WriteLine($"Block Mined - {Hash}");
+        }
+
+        public void AddTransaction(Dictionary<String, TransactionOutput> utxos, Transaction transaction)
+        {
+            if (PreviousHash != "0")
+            {
+                if(!transaction.ProcessTransaction(utxos))
+                    throw new Exception();
+            }
+            Transactions.Add(transaction);
         }
     }
 }

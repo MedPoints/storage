@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Storage.Core;
 using Storage.Data.LevelDB;
+using Storage.Utils;
 
 namespace Storage.Cli
 {
@@ -8,6 +10,7 @@ namespace Storage.Cli
     {
         static void Main(string[] args)
         {
+
             /*var sender = new Wallet();
             var receipent = new Wallet();
 
