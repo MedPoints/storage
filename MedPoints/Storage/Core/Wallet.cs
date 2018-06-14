@@ -13,6 +13,8 @@ namespace Storage.Core
         public string PublicKey { get; }
 
         private readonly UnicodeEncoding _encoder = new UnicodeEncoding();
+        // ReSharper disable once InconsistentNaming
+        public Dictionary<String, TransactionOutput> UTXOs { get; set; } = new Dictionary<String, TransactionOutput>();
 
         public Wallet()
         {
@@ -21,6 +23,47 @@ namespace Storage.Core
                 PrivateKey = rsa.ToJsonString(true);
                 PublicKey = rsa.ToJsonString(false);
             }
+        }
+
+        public decimal GetBalance(Dictionary<String, TransactionOutput> chainUtxos)
+        {
+            decimal sum = 0;
+            foreach (var utxo in chainUtxos)
+            {
+                var item = utxo.Value;
+                if (item.IsMine(PublicKey))
+                {
+                    UTXOs[item.Id] = item;
+                    sum += item.Amount;
+                }
+            }
+            return sum;
+        }
+
+        public Transaction Send(Dictionary<String, TransactionOutput> chainUtxos, string recipient, decimal amount)
+        {
+            if (GetBalance(chainUtxos) < amount)
+                return null;
+            
+            var inputs = new List<TransactionInput>();
+            decimal sum = 0;
+            foreach (var utxoItem in UTXOs)
+            {
+                var utxo = utxoItem.Value;
+                sum += utxo.Amount;
+                inputs.Add(new TransactionInput(){TransactionOutputId = utxo.Id});
+                if(sum > amount) break;
+            }
+
+            var tx = new Transaction(PublicKey, recipient, amount, inputs);
+            tx.Sign(this);
+
+            foreach (var transactionInput in inputs)
+            {
+                UTXOs.Remove(transactionInput.TransactionOutputId);
+            }
+
+            return tx;
         }
 
         public string Decrypt(string data)
@@ -117,5 +160,7 @@ namespace Storage.Core
 
             return verified;
         }
+
+
     }
 }
