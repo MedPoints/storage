@@ -24,7 +24,7 @@ namespace Storage.Utils
             return sb.ToString();
         }
 
-        public static string GenerateMerkleRoot(this List<Transaction> transactions)
+        public static string GenerateMerkleRoot(this List<CoinTransaction> transactions)
         {
             int count = transactions.Count;
             var previousTreeLayer = new List<string>();

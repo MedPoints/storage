@@ -1,24 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
+using Storage.Core.Transactions;
 using Storage.Utils;
 
 namespace Storage.Core
 {
-    public class Transaction
+    public class CoinTransaction : ITransaction
     {
         public string Id { get; set; }
-        public string Sender { get; private set; }
+        public string Sender { get; set; }
         public string Reciepient { get; private set; }
         public decimal Amount { get; private set; }
-        public string Signature { get; private set; }
+        public string Signature { get; set; }
+       
 
-        public List<TransactionInput> Inputs { get; }
+        private List<TransactionInput> Inputs { get; }
         public List<TransactionOutput> Outputs { get; } = new List<TransactionOutput>();
 
         private static int Sequence { get; set; }
 
-        public Transaction(
+        public CoinTransaction(
             string from, 
             string to, 
             decimal amount, 
@@ -80,7 +83,7 @@ namespace Storage.Core
             return true;
         }
 
-        public decimal GetInputsValue()
+        private decimal GetInputsValue()
         {
             decimal sum = 0;
             foreach (var transactionInput in Inputs)
@@ -100,6 +103,8 @@ namespace Storage.Core
             }
             return total;
         }
+
+        public TransactionType Type => TransactionType.Coins;
     }
 
     public class TransactionOutput
@@ -111,10 +116,10 @@ namespace Storage.Core
 
         public TransactionOutput(string reciepient, decimal amount, string parentTransactionId)
         {
-            this.Reciepient = reciepient;
-            this.Amount = amount;
-            this.ParentTransactionId = parentTransactionId;
-            this.Id = $"{Reciepient}{Amount}{ParentTransactionId}".GetSha256Hash();
+            Reciepient = reciepient;
+            Amount = amount;
+            ParentTransactionId = parentTransactionId;
+            Id = $"{Reciepient}{Amount}{ParentTransactionId}".GetSha256Hash();
         }
 
 
@@ -130,5 +135,18 @@ namespace Storage.Core
 
         // ReSharper disable once InconsistentNaming
         public TransactionOutput UTXO { get; set; }
+    }
+
+    public static class TransactionExtensions
+    {
+        public static string Serialize(this CoinTransaction tx)
+        {
+            return JsonConvert.SerializeObject(tx);
+        }
+
+        public static CoinTransaction Deserialize(string data)
+        {
+            return JsonConvert.DeserializeObject<CoinTransaction>(data);
+        }
     }
 }

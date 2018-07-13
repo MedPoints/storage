@@ -40,7 +40,7 @@ namespace Storage.Core
             return sum;
         }
 
-        public Transaction Send(Dictionary<String, TransactionOutput> chainUtxos, string recipient, decimal amount)
+        public CoinTransaction Send(Dictionary<String, TransactionOutput> chainUtxos, string recipient, decimal amount)
         {
             if (GetBalance(chainUtxos) < amount)
                 return null;
@@ -55,7 +55,7 @@ namespace Storage.Core
                 if(sum > amount) break;
             }
 
-            var tx = new Transaction(PublicKey, recipient, amount, inputs);
+            var tx = new CoinTransaction(PublicKey, recipient, amount, inputs);
             tx.Sign(this);
 
             foreach (var transactionInput in inputs)

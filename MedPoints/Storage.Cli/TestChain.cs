@@ -7,13 +7,13 @@ namespace Storage.Cli
 {
     public class TestChain
     {
-        public static List<Block> Blocks = new List<Block>();
-        public static Dictionary<String, TransactionOutput> UTXOs = new Dictionary<String, TransactionOutput>();
+        private static List<Block> Blocks = new List<Block>();
+        private static Dictionary<String, TransactionOutput> UTXOs = new Dictionary<String, TransactionOutput>();
 
-        public static int Difficulty = 3;
-        public static Wallet WalletA;
-        public static Wallet WalletB;
-        public static Transaction GenesisTransaction;
+        private static int Difficulty = 3;
+        private static Wallet WalletA;
+        private static Wallet WalletB;
+        private static CoinTransaction _genesisCoinTransaction;
 
         public static void Test()
         {
@@ -21,16 +21,16 @@ namespace Storage.Cli
             WalletB = new Wallet();
             var coinBase = new Wallet();
 
-            GenesisTransaction = new Transaction(coinBase.PublicKey, WalletA.PublicKey, 100, null);
-            GenesisTransaction.Sign(coinBase);
-            GenesisTransaction.Id = "0";
-            GenesisTransaction.Outputs.Add(
-                new TransactionOutput(GenesisTransaction.Reciepient, GenesisTransaction.Amount, GenesisTransaction.Id)
+            _genesisCoinTransaction = new CoinTransaction(coinBase.PublicKey, WalletA.PublicKey, 100, null);
+            _genesisCoinTransaction.Sign(coinBase);
+            _genesisCoinTransaction.Id = "0";
+            _genesisCoinTransaction.Outputs.Add(
+                new TransactionOutput(_genesisCoinTransaction.Reciepient, _genesisCoinTransaction.Amount, _genesisCoinTransaction.Id)
                 );
-            UTXOs[GenesisTransaction.Outputs[0].Id] = GenesisTransaction.Outputs[0];
+            UTXOs[_genesisCoinTransaction.Outputs[0].Id] = _genesisCoinTransaction.Outputs[0];
 
             var genesis = new Block("0");
-            genesis.AddTransaction(UTXOs, GenesisTransaction);
+            genesis.AddTransaction(UTXOs, _genesisCoinTransaction);
             AddBlock(genesis);
 
             var balance = WalletA.GetBalance(UTXOs);

@@ -12,7 +12,7 @@ namespace Storage.Core
         public DateTime Time { get; private set; }
         public int Nonce { get; private set; }
         public string MerkleRoot { get; private set; }
-        public List<Transaction> Transactions { get;} = new List<Transaction>();
+        public List<CoinTransaction> Transactions { get;} = new List<CoinTransaction>();
 
         public Block( string previousHash)
         {
@@ -39,14 +39,14 @@ namespace Storage.Core
             Console.WriteLine($"Block Mined - {Hash}");
         }
 
-        public void AddTransaction(Dictionary<String, TransactionOutput> utxos, Transaction transaction)
+        public void AddTransaction(Dictionary<String, TransactionOutput> utxos, CoinTransaction coinTransaction)
         {
             if (PreviousHash != "0")
             {
-                if(!transaction.ProcessTransaction(utxos))
+                if(!coinTransaction.ProcessTransaction(utxos))
                     throw new Exception();
             }
-            Transactions.Add(transaction);
+            Transactions.Add(coinTransaction);
         }
     }
 }
