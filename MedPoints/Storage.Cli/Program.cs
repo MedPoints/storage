@@ -9,7 +9,10 @@ namespace Storage.Cli
     {
         static void Main(string[] args)
         {
-            TestChain.Test();
+            var coinbase = new Wallet();
+            //Console.WriteLine(coinbase.PrivateKey.);
+            
+            //TestChain.Test();
 
             /*var sender = new Wallet();
             var receipent = new Wallet();

@@ -138,6 +138,13 @@ namespace Storage.Core.Transactions
 
     public static class TransactionExtensions
     {
+        public static string Serialize(this Block block)
+        {
+            var serializerSettings =
+                new JsonSerializerSettings {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+            return JsonConvert.SerializeObject(block, serializerSettings);
+        }
+              
         public static string Serialize(this ITransaction tx)
         {
             var serializerSettings =

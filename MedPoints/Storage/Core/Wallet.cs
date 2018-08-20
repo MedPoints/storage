@@ -10,7 +10,7 @@ namespace Storage.Core
 {
     public class Wallet
     {
-        private string PrivateKey { get; }
+        public string PrivateKey { get; }
         public string PublicKey { get; }
 
         private readonly UnicodeEncoding _encoder = new UnicodeEncoding();
@@ -24,6 +24,15 @@ namespace Storage.Core
                 PrivateKey = rsa.ToJsonString(true);
                 PublicKey = rsa.ToJsonString(false);
             }
+        }
+
+        public Wallet(string privateKey)
+        {
+            PrivateKey = privateKey;
+            var rsa = new RSACryptoServiceProvider();
+            rsa.FromJsonString(privateKey);
+            PublicKey = rsa.ToJsonString(false);
+            rsa.Dispose();
         }
 
         public decimal GetBalance(Dictionary<String, TransactionOutput> chainUtxos)
