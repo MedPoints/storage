@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Storage.Core.Transactions;
 using Storage.Utils;
 
 namespace Storage.Core
@@ -12,7 +13,8 @@ namespace Storage.Core
         public DateTime Time { get; private set; }
         public int Nonce { get; private set; }
         public string MerkleRoot { get; private set; }
-        public List<CoinTransaction> Transactions { get;} = new List<CoinTransaction>();
+        public List<CoinTransaction> CoinTransactions { get;} = new List<CoinTransaction>();
+        public List<ITransaction> OtherTransactions { get;} = new List<ITransaction>(); 
 
         public Block( string previousHash)
         {
@@ -29,7 +31,7 @@ namespace Storage.Core
 
         public void MineBlock(int difficulty)
         {
-            MerkleRoot = Transactions.GenerateMerkleRoot();
+            MerkleRoot = CoinTransactions.GenerateMerkleRoot();
             var target = string.Empty.PadLeft(difficulty, '0');
             while (Hash.Substring(0, difficulty) != target)
             {
@@ -46,7 +48,12 @@ namespace Storage.Core
                 if(!coinTransaction.ProcessTransaction(utxos))
                     throw new Exception();
             }
-            Transactions.Add(coinTransaction);
+            CoinTransactions.Add(coinTransaction);
+        }
+        
+        public void AddTransaction(ITransaction transaction)
+        {
+            OtherTransactions.Add(transaction);
         }
     }
 }

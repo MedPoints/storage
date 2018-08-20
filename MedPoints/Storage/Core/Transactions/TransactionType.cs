@@ -3,7 +3,6 @@
     public enum TransactionType
     {
         Coins,
-        VisitToTheDoctor,
-        Document
+        VisitToTheDoctor
     }
 }

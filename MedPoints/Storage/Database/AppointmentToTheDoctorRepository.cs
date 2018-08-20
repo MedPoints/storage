@@ -4,12 +4,11 @@ using System.Linq;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
-using Storage.Core;
 using Storage.Core.Transactions;
 
 namespace Storage.Database
 {
-    public class CoinTransactionRepository
+    public class AppointmentToTheDoctorRepository
     {
         private class TxInternal
         {
@@ -21,13 +20,13 @@ namespace Storage.Database
         private string connectionString;
         private IDbConnection Connection => new NpgsqlConnection(connectionString);
         
-        public CoinTransactionRepository(IConfiguration configuration)
+        public AppointmentToTheDoctorRepository(IConfiguration configuration)
         {
             connectionString = configuration.GetValue<string>("DBInfo:ConnectionString");
         }
 
 
-        public void Add(string userId, CoinTransaction tx)
+        public void Add(string userId, AppointmentToTheDoctorTransaction tx)
         {
             using (IDbConnection dbConnection = Connection)
             {
@@ -38,17 +37,29 @@ namespace Storage.Database
             }
  
         }
+        
+        public List<AppointmentToTheDoctorTransaction> GetByDoctorId(string doctorId)
+        {
+            using (IDbConnection dbConnection = Connection)
+            {
+                dbConnection.Open();
+                return dbConnection
+                    .Query<TxInternal>("SELECT * FROM transactions where type == @Type and transaction->>'doctorId' = '@DoctorId';",
+                        new {DoctorId = doctorId, Type = TransactionType.VisitToTheDoctor})
+                    .Select(tx => TransactionExtensions.Deserialize<AppointmentToTheDoctorTransaction>(tx.Transaction)).ToList();
+            }
+        }
 
 
-        public List<CoinTransaction> GetByUserId(string userId)
+        public List<AppointmentToTheDoctorTransaction> GetByUserId(string userId)
         {
             using (IDbConnection dbConnection = Connection)
             {
                 dbConnection.Open();
                 return dbConnection
                     .Query<TxInternal>("SELECT * FROM transactions where user_id=@UserId and type=@Type",
-                        new TxInternal {UserId = userId, Type = TransactionType.Coins})
-                    .Select(tx => TransactionExtensions.Deserialize<CoinTransaction>(tx.Transaction)).ToList();
+                        new TxInternal {UserId = userId, Type = TransactionType.VisitToTheDoctor})
+                    .Select(tx => TransactionExtensions.Deserialize<AppointmentToTheDoctorTransaction>(tx.Transaction)).ToList();
             }
         }
     }

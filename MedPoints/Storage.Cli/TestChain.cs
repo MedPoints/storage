@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Storage.Core;
+using Storage.Core.Transactions;
 
 namespace Storage.Cli
 {

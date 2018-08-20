@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
-using Storage.Core.Transactions;
+using Newtonsoft.Json.Serialization;
 using Storage.Utils;
 
-namespace Storage.Core
+namespace Storage.Core.Transactions
 {
     public class CoinTransaction : ITransaction
     {
-        public string Id { get; set; }
-        public string Sender { get; set; }
         public string Reciepient { get; private set; }
         public decimal Amount { get; private set; }
+        public string Id { get; set; }
+        public string Sender { get; set; }
         public string Signature { get; set; }
-       
+        public TransactionType Type => TransactionType.Coins;
 
         private List<TransactionInput> Inputs { get; }
         public List<TransactionOutput> Outputs { get; } = new List<TransactionOutput>();
@@ -104,7 +103,7 @@ namespace Storage.Core
             return total;
         }
 
-        public TransactionType Type => TransactionType.Coins;
+
     }
 
     public class TransactionOutput
@@ -139,14 +138,16 @@ namespace Storage.Core
 
     public static class TransactionExtensions
     {
-        public static string Serialize(this CoinTransaction tx)
+        public static string Serialize(this ITransaction tx)
         {
-            return JsonConvert.SerializeObject(tx);
+            var serializerSettings =
+                new JsonSerializerSettings {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+            return JsonConvert.SerializeObject(tx, serializerSettings);
         }
 
-        public static CoinTransaction Deserialize(string data)
+        public static T Deserialize<T>(string data)
         {
-            return JsonConvert.DeserializeObject<CoinTransaction>(data);
+            return JsonConvert.DeserializeObject<T>(data);
         }
     }
 }
