@@ -48,5 +48,10 @@ namespace Storage.Utils
 
             return treeLayer.Count == 1 ? treeLayer[0] : "";
         }
+        
+        public static string Base64Encode(this string plainText) {
+            var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+            return Convert.ToBase64String(plainTextBytes);
+        }
     }
 }
