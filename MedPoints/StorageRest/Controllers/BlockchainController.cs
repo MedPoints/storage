@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Storage.Core;
-using Storage.Core.Transactions;
-using Storage.Database;
-using Storage.Mempool;
+using StorageRest.App;
 
 namespace StorageRest.Controllers
 {
@@ -13,82 +9,44 @@ namespace StorageRest.Controllers
     [ApiController]
     public class BlockchainController : ControllerBase
     {
-        private readonly Mempool _mempool;
-        private readonly BlockRepository _blockRepository;
+        private readonly SqLiteBaseRepository _baseRepository;
 
-        public BlockchainController(Mempool mempool, BlockRepository blockRepository)
+        public BlockchainController(SqLiteBaseRepository baseRepository)
         {
-            _mempool = mempool;
-            _blockRepository = blockRepository;
+            _baseRepository = baseRepository;
         }
 
         [HttpPost]
         [Route("wallets")]
-        public Wallet Get()
+        public Wallet CreateWallet()
         {
-            try
-            {
-                var wallet = new Wallet();
-                var debit = new CoinTransaction(Helper.COIN_BASE, wallet.PublicKey, 100, null);
-                _mempool.AddToMempool(JsonConvert.SerializeObject(debit), wallet.PublicKey, debit.Type);
-                return wallet;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }                     
+            return new Wallet();
         }
-
-        [HttpGet]
-        [Route("wallets/balance/{address}")]
-        public decimal GetBalance(string address)
-        {
-            return Wallet.GetBalanceByAddress(address, Helper.UTXOs);
-        }
-        
-        
-        [HttpPost]
-        [Route("appointment-transactions")]
-        public void Post(AppointmentToTheDoctorTransaction tx)
-        {
-            tx.Id = Guid.NewGuid().ToString();
-            _mempool.AddToMempool(JsonConvert.SerializeObject(tx), tx.Sender, tx.Type);
-        }
-
 
         [HttpGet]
         [Route("blocks")]
         public List<Block> GetBlocks()
         {
-            return _blockRepository.GetBlocks();
+            return _baseRepository.GetBlocks();
         }
-        
-        [HttpPost]
-        [Route("mine-block/{privateKey}")]
-        public void MineBlock(string privateKey)
-        {    
-            _mempool.Mine(new Wallet(privateKey));
-            Helper.Save();
-        }
-        
-        [HttpPost]
-        [Route("send-coins/{fromKey}/{to}/{value}")]
-        public void MineBlock(string fromKey, string to, decimal value)
-        {   
-            var wallet = new Wallet(fromKey);
-            var debit = wallet.Send(Helper.UTXOs, to, value);
-            if(debit == null)
-                throw new Exception();
-            debit.ProcessTransaction(Helper.UTXOs);
 
+        [HttpPost]
+        [Route("transactions")]
+        public void CreateTransactions([FromBody] VisitToDoctorTransaction tx)
+        {
+            var txs = _baseRepository.GetTransactions();
+            if (txs.Count != 2)
+            {
+                _baseRepository.Add(tx);
+                return;
+            }
 
-            var aa = JsonConvert.SerializeObject(debit);
-            var bb = JsonConvert.DeserializeObject<CoinTransaction>(aa);
-            
-            _mempool.AddToMempool(JsonConvert.SerializeObject(debit), wallet.PublicKey, debit.Type);
-            _mempool.Mine(new Wallet(Helper.COIN_BASE_PASSWORD));
-            Helper.Save();
+            var blockHash = _baseRepository.GetLastBlockHash();
+            var newBlock = new Block(blockHash);
+            txs.Add(tx);
+            txs.ForEach(transaction => newBlock.AddTransaction(transaction));
+            newBlock.MineBlock(3);
+            _baseRepository.Add(newBlock);
         }
     }
 }
