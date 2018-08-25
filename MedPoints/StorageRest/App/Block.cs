@@ -6,13 +6,13 @@ namespace StorageRest.App
 {
     public class Block
     {
-        public string Hash { get; private set; }
-        public string PreviousHash { get; private set; }
-        public DateTime Time { get; private set; }
-        public int Nonce { get; private set; }
-        public List<VisitToDoctorTransaction> Transactions { get;} = new List<VisitToDoctorTransaction>(); 
+        public string Hash { get; set; }
+        public string PreviousHash { get; set; }
+        public DateTime Time { get; set; }
+        public int Nonce { get; set; }
+        public List<VisitToDoctorTransaction> Transactions { get; set; } = new List<VisitToDoctorTransaction>();
 
-        public Block( string previousHash)
+        public Block(string previousHash)
         {
             PreviousHash = previousHash;
             Time = DateTime.UtcNow;
@@ -21,7 +21,7 @@ namespace StorageRest.App
 
         public string CalculateHash()
         {
-            var hash = $"{PreviousHash}{Time}".GetSha256Hash();
+            var hash = $"{PreviousHash}{Time}{Nonce}".GetSha256Hash();
             return hash;
         }
 

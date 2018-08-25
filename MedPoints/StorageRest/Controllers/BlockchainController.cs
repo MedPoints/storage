@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using StorageRest.App;
+using StorageRest.Utils;
 
 namespace StorageRest.Controllers
 {
@@ -34,6 +36,7 @@ namespace StorageRest.Controllers
         [Route("transactions")]
         public void CreateTransactions([FromBody] VisitToDoctorTransaction tx)
         {
+            tx.Id = Guid.NewGuid().ToString().Base64Encode();
             var txs = _baseRepository.GetTransactions();
             if (txs.Count != 2)
             {
@@ -47,6 +50,8 @@ namespace StorageRest.Controllers
             txs.ForEach(transaction => newBlock.AddTransaction(transaction));
             newBlock.MineBlock(3);
             _baseRepository.Add(newBlock);
+            
+            txs.ForEach(transaction => _baseRepository.Remove(transaction));
         }
     }
 }

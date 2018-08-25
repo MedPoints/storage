@@ -1,30 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Dapper;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 
 namespace StorageRest.App
 {
     public class SqLiteBaseRepository
     {
-        public static string DbFile => Environment.CurrentDirectory + "\\SimpleDb.sqlite";
+        public static string DbFile => Environment.CurrentDirectory + "SimpleDb.sqlite";
 
-        public static SQLiteConnection NewConnection()
+        public static SqliteConnection NewConnection()
         {
-            return new SQLiteConnection("Data Source=" + DbFile);
+            return new SqliteConnection("Data Source=" + DbFile);
         }
 
         public static void InitDatabase()
         {
-            if (!File.Exists(DbFile))
-                File.Create(DbFile).Dispose();
-
+            if (File.Exists(DbFile))
+                return;
+            
+            
+            File.Create(DbFile).Dispose();
             using (var cnn = NewConnection())
             {
                 cnn.Open();
@@ -108,6 +108,18 @@ namespace StorageRest.App
                     .Select(record => JsonConvert.DeserializeObject<VisitToDoctorTransaction>(record.Data))
                     .Cast<VisitToDoctorTransaction>()
                     .ToList();
+            }
+        }
+        
+        
+        public void Remove(VisitToDoctorTransaction transaction)
+        {
+            using (IDbConnection dbConnection = NewConnection())
+            {
+                dbConnection.Open();
+                dbConnection.Execute(
+                    @"DELETE FROM Transactions WHERE Hash = @Hash;",
+                    new { Hash = transaction.Id});
             }
         }
     }
