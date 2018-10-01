@@ -22,8 +22,8 @@ namespace StorageRest.App
         {
             if (File.Exists(DbFile))
                 return;
-            
-            
+
+
             File.Create(DbFile).Dispose();
             using (var cnn = NewConnection())
             {
@@ -86,7 +86,7 @@ namespace StorageRest.App
                     new {block.Hash, Data = JsonConvert.SerializeObject(block)});
             }
         }
-        
+
         public void Add(VisitToDoctorTransaction transaction)
         {
             using (IDbConnection dbConnection = NewConnection())
@@ -94,7 +94,7 @@ namespace StorageRest.App
                 dbConnection.Open();
                 dbConnection.Execute(
                     @"INSERT INTO Transactions ( Hash, Data) VALUES ( @Hash, @Data);",
-                    new { Hash = transaction.Id, Data = JsonConvert.SerializeObject(transaction)});
+                    new {Hash = transaction.Id, Data = JsonConvert.SerializeObject(transaction)});
             }
         }
 
@@ -110,8 +110,16 @@ namespace StorageRest.App
                     .ToList();
             }
         }
-        
-        
+
+        public List<VisitToDoctorTransaction> GetTransactionsByUserAddress(string userAddress)
+        {
+            var blocks = GetBlocks();
+            return blocks.SelectMany(x => x.Transactions)
+                .Where(x => x.UserAddress == userAddress)
+                .ToList();
+        }
+
+
         public void Remove(VisitToDoctorTransaction transaction)
         {
             using (IDbConnection dbConnection = NewConnection())
@@ -119,7 +127,7 @@ namespace StorageRest.App
                 dbConnection.Open();
                 dbConnection.Execute(
                     @"DELETE FROM Transactions WHERE Hash = @Hash;",
-                    new { Hash = transaction.Id});
+                    new {Hash = transaction.Id});
             }
         }
     }

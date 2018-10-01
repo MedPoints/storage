@@ -53,5 +53,13 @@ namespace StorageRest.Controllers
             
             txs.ForEach(transaction => _baseRepository.Remove(transaction));
         }
+        
+        [HttpGet]
+        [Route("/{userAddress}/transactions")]
+        public List<VisitToDoctorTransaction> GetTransactions(string userAddress)
+        {
+            return _baseRepository.GetTransactionsByUserAddress(userAddress.Trim());
+        }
+        
     }
 }
