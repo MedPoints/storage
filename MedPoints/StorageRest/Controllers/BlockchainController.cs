@@ -37,12 +37,7 @@ namespace StorageRest.Controllers
         public void CreateTransactions([FromBody] VisitToDoctorTransaction tx)
         {
             tx.Id = Guid.NewGuid().ToString().Base64Encode();
-            var txs = _baseRepository.GetTransactions();
-            if (txs.Count != 2)
-            {
-                _baseRepository.Add(tx);
-                return;
-            }
+            var txs = _baseRepository.GetTransactions() ?? new List<VisitToDoctorTransaction>();
 
             var blockHash = _baseRepository.GetLastBlockHash();
             var newBlock = new Block(blockHash);
