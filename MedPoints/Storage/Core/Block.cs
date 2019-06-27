@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using Storage.Core.Transactions;
@@ -41,7 +42,7 @@ namespace Storage.Core
             Console.WriteLine($"Block Mined - {Hash}");
         }
 
-        public void AddTransaction(Dictionary<String, TransactionOutput> utxos, CoinTransaction coinTransaction)
+        public void AddTransaction(ConcurrentDictionary<String, TransactionOutput> utxos, CoinTransaction coinTransaction)
         {
             if (PreviousHash != "0")
             {

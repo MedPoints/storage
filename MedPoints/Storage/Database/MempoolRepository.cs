@@ -1,39 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
+using Storage.Core.Transactions;
 using Storage.Mempool;
 
 namespace Storage.Database
 {
     public class MempoolRepository
     {
-        private string connectionString;
-        private IDbConnection Connection => new NpgsqlConnection(connectionString);
+        private readonly string _connectionString;
 
-        public MempoolRepository(IConfiguration configuration)
+        public MempoolRepository(string connectionString)
         {
-            connectionString = configuration.GetValue<string>("DBInfo:ConnectionString");
+            this._connectionString = connectionString;
         }
 
 
         public void Add(MempoolTransaction tx)
         {
             tx.Id = Guid.NewGuid().ToString();
-            using (IDbConnection dbConnection = Connection)
+            using (IDbConnection dbConnection = new NpgsqlConnection(_connectionString))
             {
                 dbConnection.Open();
                 dbConnection.Execute(
-                    "INSERT INTO mempool (id, user_id, type, transaction) VALUES(@Id, @UserId, @Type, @Transaction)",
-                    tx);
+                    "INSERT INTO mempool (tx_hash, user_id, type, transaction) VALUES(@Id, @UserId, @Type, to_jsonb(@Transaction))",
+                    new {Id = tx.Id, UserId = tx.UserId, Type = (int) tx.Type, Transaction = tx.Transaction});
             }
         }
 
         public MempoolTransaction GetNext()
         {
-            using (IDbConnection dbConnection = Connection)
+            using (IDbConnection dbConnection = new NpgsqlConnection(_connectionString))
             {
                 dbConnection.Open();
                 return dbConnection
@@ -43,21 +44,27 @@ namespace Storage.Database
 
         public List<MempoolTransaction> GetNextList()
         {
-            using (IDbConnection dbConnection = Connection)
+            using (IDbConnection dbConnection = new NpgsqlConnection(_connectionString))
             {
                 dbConnection.Open();
                 return dbConnection
-                    .QueryFirst("SELECT * FROM mempool LIMIT 10");
+                    .Query("SELECT * FROM mempool LIMIT 10").Select(x => new MempoolTransaction
+                    {
+                        Id = x.tx_hash,
+                        UserId = x.user_id,
+                        Type = (TransactionType) x.type,
+                        Transaction = x.transaction
+                    }).ToList();
             }
         }
 
 
         public void Delete(string txId)
         {
-            using (IDbConnection dbConnection = Connection)
+            using (IDbConnection dbConnection = new NpgsqlConnection(_connectionString))
             {
                 dbConnection.Open();
-                dbConnection.Execute("DELETE FROM mempool WHERE id = @TxId", new {TxId = txId});
+                dbConnection.Execute("DELETE FROM mempool WHERE tx_hash = @TxId", new {TxId = txId});
             }
         }
     }

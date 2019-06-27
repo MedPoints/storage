@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -15,7 +16,7 @@ namespace Storage.Core.Transactions
         public string Signature { get; set; }
         public TransactionType Type => TransactionType.Coins;
 
-        private List<TransactionInput> Inputs { get; }
+        private List<TransactionInput> Inputs { get; } = new List<TransactionInput>();
         public List<TransactionOutput> Outputs { get; } = new List<TransactionOutput>();
 
         private static int Sequence { get; set; }
@@ -30,32 +31,18 @@ namespace Storage.Core.Transactions
             Sender = from;
             Reciepient = to;
             Amount = amount;
-            Inputs = inputs;
+            Inputs = inputs ?? new List<TransactionInput>();
         }
 
-        private string CalculateHash()
+        public string CalculateHash()
         {
             Sequence++;
             return $"{Sender}{Reciepient}{Amount}{Sequence}".GetSha256Hash();
         }
 
-        public void Sign(Wallet wallet)
-        {
-            var data = $"{Sender}{Reciepient}{Amount}";
-            Signature = wallet.SignMessage(data);
-        }
 
-        public bool VerifySignature()
+        public bool ProcessTransaction(ConcurrentDictionary<String, TransactionOutput> utxos)
         {
-            var data = $"{Sender}{Reciepient}{Amount}";
-            return Wallet.VerifyMessage(data, Signature, Sender);
-        }
-
-        public bool ProcessTransaction(Dictionary<String, TransactionOutput> utxos)
-        {
-            if (!VerifySignature())
-                return false;
-
             foreach (var input in Inputs)
             {
                 input.UTXO = utxos[input.TransactionOutputId];
@@ -76,7 +63,7 @@ namespace Storage.Core.Transactions
             foreach (var transactionInput in Inputs)
             {
                 if(transactionInput.UTXO == null)continue;
-                utxos.Remove(transactionInput.UTXO.Id);
+                utxos.TryRemove(transactionInput.UTXO.Id, out var value);
             }
 
             return true;

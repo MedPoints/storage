@@ -13,28 +13,28 @@ namespace Storage.Database
     {
         private class TxInternal
         {
+            public string TxHash { get; set; }
             public string UserId { get; set; }
             public TransactionType Type { get; set; }
             public string Transaction { get; set; }
         }
         
-        private string connectionString;
-        private IDbConnection Connection => new NpgsqlConnection(connectionString);
-        
-        public CoinTransactionRepository(IConfiguration configuration)
+        private string _connectionString;
+
+        public CoinTransactionRepository(string connectionString)
         {
-            connectionString = configuration.GetValue<string>("DBInfo:ConnectionString");
+            _connectionString = connectionString;
         }
 
 
         public void Add(string userId, CoinTransaction tx)
         {
-            using (IDbConnection dbConnection = Connection)
+            using (IDbConnection dbConnection = new NpgsqlConnection(_connectionString))
             {
                 dbConnection.Open();
                 dbConnection.Execute(
-                    "INSERT INTO transactions (user_id, type, transaction) VALUES(@UserId,@Type,@Transaction)",
-                    new TxInternal{UserId = userId, Type = tx.Type, Transaction = tx.Serialize()});
+                    "INSERT INTO transactions (tx_hash, user_id, type, transaction) VALUES(@TxHash, @UserId,@Type,to_jsonb(@Transaction))",
+                    new TxInternal{TxHash = tx.Id, UserId = userId, Type = tx.Type, Transaction = tx.Serialize()});
             }
  
         }
@@ -42,7 +42,7 @@ namespace Storage.Database
 
         public List<CoinTransaction> GetByUserId(string userId)
         {
-            using (IDbConnection dbConnection = Connection)
+            using (IDbConnection dbConnection = new NpgsqlConnection(_connectionString))
             {
                 dbConnection.Open();
                 return dbConnection

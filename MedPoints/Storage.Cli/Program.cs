@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Storage.Core;
 using Storage.Utils;
 
@@ -10,8 +11,12 @@ namespace Storage.Cli
         static void Main(string[] args)
         {
             var coinbase = new Wallet();
+            var privateKey = coinbase.PrivateKey;
+            Console.WriteLine(coinbase.PrivateKey);
+            Console.WriteLine(coinbase.PublicKey);
+
             //Console.WriteLine(coinbase.PrivateKey.);
-            
+
             //TestChain.Test();
 
             /*var sender = new Wallet();
