@@ -119,6 +119,13 @@ namespace StorageRest.App
                 .ToList();
         }
 
+        public List<VisitToDoctorTransaction> GetTransactionsByDoctorId(string doctorId)
+        {
+            var blocks = GetBlocks();
+            return blocks.SelectMany(x => x.Transactions)
+                .Where(x => x.DoctorId == doctorId)
+                .ToList();
+        }
 
         public void Remove(VisitToDoctorTransaction transaction)
         {

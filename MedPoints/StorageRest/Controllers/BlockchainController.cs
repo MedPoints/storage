@@ -55,6 +55,13 @@ namespace StorageRest.Controllers
         {
             return _baseRepository.GetTransactionsByUserAddress(userAddress.Trim());
         }
+
+        [HttpGet]
+        [Route("/doctors/{doctorId}")]
+        public List<VisitToDoctorTransaction> GetTransactionsByDoctorId(string doctorId)
+        {
+            return _baseRepository.GetTransactionsByDoctorId(doctorId.Trim());
+        }
         
     }
 }
